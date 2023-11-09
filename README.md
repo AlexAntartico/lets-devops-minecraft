@@ -1,92 +1,78 @@
 # Lets DevOps Minecraft
 
+## Tools and Versions
 
+- Terraform `v1.5.5`
+- Packer `v1.9.2`
+- Ansible `v.2.13.13`
+- Yamllint `v1.32.0`
 
-## Getting started
+## Prerequisites
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- AWS CLI properly configured, with enough permissions, etc.
+- Creating a Remote State S3 Bucket and DynamoDB Table for Terraform Locks.
+- Creating a Map Backups S3 Bucket (deploy using `terraform/S3-Backup`)
+- Having a valid domain name registered in Route53.
+- Subscribing to Marketplace AMI we are using as base in order to use it in Terraform + Packer. (Centos 8)
+- Exiting the SNS/SMS Sandbox by opening an AWS Case, instructions for this are provided in the AWS Console or Using Limited Sandbox Approved SMS Numbers.
+- Creating an SSH Key in AWS in `us-east-1` to use for Packer or Terraform, we are calling it `minecraft-server-key` as an example. Replace any ocurrences of this name with your key name `ansible/` might have 1 instance of this key name hardcoded.
+- Creating an `.env` environment variable file in the root of the repo and filling it with the required values, example:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+```bash
+# Global Terraform Variables
 
-## Add your files
+REMOTE_BUCKET_NAME=
+REMOTE_DYNAMODB_TABLE=
+AWS_DEFAULT_REGION=us-east-1
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+# S3-Backup Terraform Variables
+BACKUP_BUCKET_NAME=
 
+# EC2-Server Terraform Variables
+SERVER_DOMAIN_NAME=
+SERVER_SUBDOMAIN_NAME=
+SMS_NUMBERS=["", ""]
+
+# Packer SSH Key Name
+PACKER_SSH_KEY=
+
+# Grafana Variables
+GRAFANA_AUTH=admin:admin
+GRAFANA_DOMAIN=http://minecraft.armandoherra.games:3000/
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/SekethThoth/lets-devops-minecraft.git
-git branch -M main
-git push -uf origin main
+
+## Getting Started
+
+- Once you have configured all the pre-requisites, you can adjust the server settings, level name, etc to your liking in the Packer configuration (`packer/`), and once that is ready, run: `make init` and `make build` in `packer/` to create the AWS AMI image, wait until build finishes and you see a message similar to this:
+
+```bash
+==> amazon-ebs.minecraft_server: Stopping the source instance...
+    amazon-ebs.minecraft_server: Stopping instance
+==> amazon-ebs.minecraft_server: Waiting for the instance to stop...
+==> amazon-ebs.minecraft_server: Creating AMI DevOps_Minecraft_AMI_1699515587 from instance i-0535a8d6bc5c28d5a
+    amazon-ebs.minecraft_server: AMI: ami-084272c54c560ab80
+==> amazon-ebs.minecraft_server: Waiting for AMI to become ready...
+==> amazon-ebs.minecraft_server: Skipping Enable AMI deprecation...
+==> amazon-ebs.minecraft_server: Adding tags to AMI (ami-084272c54c560ab80)...
+==> amazon-ebs.minecraft_server: Tagging snapshot: snap-02525dc9fcf4cd97b
+==> amazon-ebs.minecraft_server: Creating AMI tags
+    amazon-ebs.minecraft_server: Adding tag: "Name": "DevOps_Minecraft_AMI_1699515587"
+==> amazon-ebs.minecraft_server: Creating snapshot tags
+==> amazon-ebs.minecraft_server: Terminating the source AWS instance...
+==> amazon-ebs.minecraft_server: Cleaning up any extra volumes...
+==> amazon-ebs.minecraft_server: No volumes to clean up, skipping
+Build 'amazon-ebs.minecraft_server' finished after 18 minutes 34 seconds.
+
+==> Wait completed after 18 minutes 34 seconds
+
+==> Builds finished. The artifacts of successful builds are:
+--> amazon-ebs.minecraft_server: AMIs were created:
+us-east-1: ami-084272c54c560ab80
 ```
 
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.com/SekethThoth/lets-devops-minecraft/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- Copy the AMI ID you obtain for your server and replace the value in `terraform/EC2-Server/variables.tf` specifically for the variable named `ami_id`.
+- Create the Backups S3 Bucket before any other infrastructure, this will also let you know if you are correctly configured and set to deploy the rest of the infrastructure. Run `make init-all` and `make apply-backups` in the `terraform/` directory.
+- Once that is done you can attempt to deploy the resources and the server, do so by going to the `terraform/` directory and running `make apply-all`.
+- If all is successful you should have a running server in 2-3 minutes!
+- When done using the server just run `make destroy-all`
+- If you want to make use of the backups/restores, you need to SSH into the MC Server VM and run the scripts from the root directory `./backup` or `./recover`.
